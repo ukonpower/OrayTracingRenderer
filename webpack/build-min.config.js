@@ -5,7 +5,7 @@ const baseConfig = require( './build-base.config' );
 module.exports = merge( baseConfig, {
 	mode: 'production',
 	output: {
-		filename: info.packageFileName + '.min.js',
+		filename: info.packageFileName + '.js',
 		library: info.packageBuildName,
 		libraryTarget: 'umd'
 	},

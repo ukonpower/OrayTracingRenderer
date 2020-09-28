@@ -179,11 +179,11 @@ eval("module.exports = \"varying vec2 vUv;\\r\\n\\r\\nvoid main( void ) {\\r\\n\
 /*!**********************!*\
   !*** ./src/index.ts ***!
   \**********************/
-/*! exports provided: Renderer, Material, GPUComputationController */
+/*! exports provided: Renderer, Material */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var _core_Renderer__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./core/Renderer */ \"./src/core/Renderer/index.ts\");\n/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, \"Renderer\", function() { return _core_Renderer__WEBPACK_IMPORTED_MODULE_0__[\"Renderer\"]; });\n\n/* harmony import */ var _core_Material__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./core/Material */ \"./src/core/Material/index.ts\");\n/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, \"Material\", function() { return _core_Material__WEBPACK_IMPORTED_MODULE_1__[\"Material\"]; });\n\n/* harmony import */ var _utils_GPUComputationController__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./utils/GPUComputationController */ \"./src/utils/GPUComputationController/index.ts\");\n/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, \"GPUComputationController\", function() { return _utils_GPUComputationController__WEBPACK_IMPORTED_MODULE_2__[\"GPUComputationController\"]; });\n\n\n\n\n\n\n//# sourceURL=webpack://OrayTracingRenderer/./src/index.ts?");
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var _core_Renderer__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./core/Renderer */ \"./src/core/Renderer/index.ts\");\n/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, \"Renderer\", function() { return _core_Renderer__WEBPACK_IMPORTED_MODULE_0__[\"Renderer\"]; });\n\n/* harmony import */ var _core_Material__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./core/Material */ \"./src/core/Material/index.ts\");\n/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, \"Material\", function() { return _core_Material__WEBPACK_IMPORTED_MODULE_1__[\"Material\"]; });\n\n\n\n\n\n//# sourceURL=webpack://OrayTracingRenderer/./src/index.ts?");
 
 /***/ }),
 

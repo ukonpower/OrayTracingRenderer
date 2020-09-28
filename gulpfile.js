@@ -65,7 +65,7 @@ function cleanBuildFiles( cb ){
 
 }
 
-function buildUMDPackage( cb ){
+function buildMinPackage( cb ){
 
 	//module build
 	const confModule = require( './webpack/build-min.config' );
@@ -136,4 +136,4 @@ let develop = gulp.series(
 );
 
 exports.default = develop;
-exports.build = gulp.series( cleanBuildFiles, buildUMDPackage, buildESModulePackage, buildTypes,buildDocs, develop );
+exports.build = gulp.series( cleanBuildFiles, buildMinPackage, buildESModulePackage, buildTypes,buildDocs, develop );
