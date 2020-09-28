@@ -1,0 +1,17 @@
+{
+	"compilerOptions": {
+		"sourceMap": true,
+		"target": "es5",
+		"module": "es2015",
+		"moduleResolution": "node",
+		"lib": [
+		"es2017",
+		"dom"
+		],
+		"typeRoots": ["node_modules/@types"],
+		"rootDir": "./",
+		"declaration": true,
+		"declarationDir": "./types"
+	},
+	"include": ["./"]
+  }
