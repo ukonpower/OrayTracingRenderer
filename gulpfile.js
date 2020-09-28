@@ -4,8 +4,9 @@ const del = require( 'del' );
 const browserSync = require( 'browser-sync' );
 const typedoc = require( 'gulp-typedoc' );
 const ts = require( 'gulp-typescript' );
-const rollup = require("rollup");
-const jest = require('jest-cli');
+
+const webpackStream = require( 'webpack-stream' );
+const webpack = require( 'webpack' );
 
 let distDir = './build';
 let srcDir = './src';
@@ -66,24 +67,23 @@ function cleanBuildFiles( cb ){
 
 function buildUMDPackage( cb ){
 
-    let config = require("./rollup.config");
+	//module build
+	const confModule = require( './webpack/build-min.config' );
 
-    config.output.format = 'umd';
-    config.output.file = distDir + '/' + info.packageFileName + '.js';
-    
-    buildRollup( config, cb );
+	webpackStream( confModule, webpack )
+        .pipe( gulp.dest( './build/' ) )
+        .on( 'end', cb );
 
 }
 
 function buildESModulePackage( cb ){
 
-    let config = require("./rollup.config");
+	//module build
+	const confModule = require( './webpack/build-module.config' );
 
-    config.output.format = 'esm';
-    config.output.file = distDir + '/' + info.packageFileName + '.module.js';
-    
-    buildRollup( config, cb );
-
+	webpackStream( confModule, webpack )
+        .pipe( gulp.dest( './build/' ) )
+        .on( 'end', cb );
 }
 
 function buildDocs( cb ){
@@ -123,12 +123,6 @@ function reload( cb ) {
     
 }
 
-function test( cb ) {
-
-    jest.run().then( cb() );
-
-}
-
 function watch(){
 
     gulp.watch( srcDir + '/**/*.ts', gulp.series( buildESModulePackage, reload ) );
@@ -142,5 +136,4 @@ let develop = gulp.series(
 );
 
 exports.default = develop;
-exports.test = test;
-exports.build = gulp.series( cleanBuildFiles, buildUMDPackage, buildTypes,buildDocs, develop );
+exports.build = gulp.series( cleanBuildFiles, buildUMDPackage, buildESModulePackage, buildTypes,buildDocs, develop );

@@ -1,13 +1,13 @@
 {
-  "name": "ukonower-package-template",
-  "version": "1.0.0",
+  "name": "oray-tracing-renderer",
+  "version": "0.0.1-dev1",
   "description": "",
-  "main": "build/test-package.js",
+  "main": "build/oray-tracing-renderer.js",
   "author": "ukonpower",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git@github.com:ukonpower/package-template.git"
+    "url": "git@github.com:ukonpower/OrayTracingRenderer.git"
   },
   "keywords": [],
   "types": "types/index.d.ts",
@@ -17,26 +17,29 @@
     "types"
   ],
   "bugs": {
-    "url": "https://github.com/ukonpower/package-template/issues"
+    "url": "https://github.com/ukonpower/OrayTracingRenderer/issues"
   },
   "devDependencies": {
-    "@types/jest": "^26.0.9",
+    "@types/offscreencanvas": "^2019.6.2",
+    "@types/webgl2": "0.0.5",
     "browser-sync": "^2.26.7",
     "del": "^5.1.0",
     "gulp": "^4.0.2",
     "gulp-plumber": "^1.2.1",
     "gulp-typedoc": "^2.2.5",
     "gulp-typescript": "^6.0.0-alpha.1",
-    "jest": "^26.2.2",
-    "jest-cli": "^26.2.2",
-    "rollup": "^2.23.0",
-    "rollup-plugin-typescript": "^1.0.1",
     "shader-loader": "^1.3.1",
-    "ts-jest": "^26.1.4",
     "ts-loader": "^6.2.2",
     "tslib": "^2.0.1",
     "typedoc": "^0.14.2",
-    "typescript": "^3.9.7"
+    "typescript": "^4.0.3",
+    "webpack": "^4.44.1",
+    "webpack-cli": "^3.3.12",
+    "webpack-dev-server": "^3.11.0",
+    "webpack-merge": "^4.2.1",
+    "webpack-stream": "^5.2.1"
   },
-  "dependencies": {}
+  "dependencies": {
+    "three": "^0.120.1"
+  }
 }

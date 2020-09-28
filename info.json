@@ -1,5 +1,5 @@
 {
-	"packageName": "TestPackage",
-	"packageFileName": "test-package",
-	"packageBuildName": "PKG"
+	"packageName": "OrayTracingRenderer",
+	"packageFileName": "oray-tracing-renderer",
+	"packageBuildName": "OrayTracingRenderer"
 }
