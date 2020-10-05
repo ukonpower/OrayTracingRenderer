@@ -302,7 +302,7 @@ void main( void ) {
 	
 	ray.origin = vec3( 0.0, 0.0, 0.0 );
 	ray.direction = ( cameraProjectionMatrixInverse * vec4( vUv * 2.0 - 1.0, 1.0, 1.0 ) ).xyz;
-	ray.direction.xy += vec2( random( vUv + time ) * 2.0 - 1.0 , random( vUv - time ) * 2.0 - 1.0 ) / max( dataSize.y,dataSize.x );
+	ray.direction.xy += vec2( random( vUv + sin( frame * 0.1) ) * 2.0 - 1.0 , random( vUv - cos( frame * 0.1 ) ) * 2.0 - 1.0 ) * 0.001;
 	ray.direction = normalize( ray.direction );
 
 	vec4 o = vec4( ( befTex.xyz + radiance( ray ) ) , 1.0 );

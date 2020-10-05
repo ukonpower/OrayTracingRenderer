@@ -138,7 +138,7 @@ export class Renderer extends GPUComputationController {
 			vertexShader: screenVert,
 			fragmentShader: screenFrag,
 			uniforms: this.commonUniforms
-		}));
+		} ) );
 
 		this.renderScene.add( this.screen );
 
@@ -207,13 +207,13 @@ export class Renderer extends GPUComputationController {
 		this.renderer.render( this.renderScene, camera );
 
 		this.commonUniforms.frame.value ++;
-		
+
 	}
 
 	public resetFrame() {
 
 		this.commonUniforms.frame.value = 0;
-		
+
 	}
 
 }
