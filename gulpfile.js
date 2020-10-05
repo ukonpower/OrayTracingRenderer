@@ -1,139 +1,132 @@
-const info = require('./info');
+const info = require( './info' );
 const gulp = require( 'gulp' );
 const del = require( 'del' );
 const browserSync = require( 'browser-sync' );
+
 const typedoc = require( 'gulp-typedoc' );
 const ts = require( 'gulp-typescript' );
 
 const webpackStream = require( 'webpack-stream' );
 const webpack = require( 'webpack' );
 
+const jest = require( 'jest-cli' );
+
+
 let distDir = './build';
 let srcDir = './src';
-let exampleDir = './examples'
-let typesDir = './types'
-
-
-function buildRollup( config, cb ) {
-    
-    rollup.rollup( config )
-        .then( function( bundle ) {
-
-            bundle.write( config.output )
-            
-        } )
-        .then( function() {
-
-            if ( cb ) cb();
-            
-        } )
-        .catch( function( error ) {
-            
-            if ( cb ) cb();
-            
-            console.error( error );
-            
-        } );
-
-}
+let typesDir = './types';
+let docsDir = './gh-pages/docs'
+let exampleDir = './gh-pages/examples';
 
 function buildTypes( cb ) {
 
-    var tsProjectDts = ts.createProject( './tsconfig.json' );
+	var tsProjectDts = ts.createProject( './config/typescript/types.tsconfig.json' );
 	var tsResult = gulp.src( srcDir + '/**/*.ts' )
-        .pipe( tsProjectDts() );
+		.pipe( tsProjectDts() );
 
-    tsResult.dts.pipe( gulp.dest( typesDir ).on( 'end', cb ) );
-
-}
-
-function cleanBuildFiles( cb ){
-
-    del([
-        './build/',
-        './docs/',
-        './types/'
-    ],{
-
-        force: true,
-
-    }).then( paths => {
-
-        cb();
-
-    });
+	tsResult.dts.pipe( gulp.dest( typesDir ).on( 'end', cb ) );
 
 }
 
-function buildMinPackage( cb ){
+function cleanBuildFiles( cb ) {
 
-	//module build
-	const confModule = require( './webpack/build-min.config' );
+	del( [
+		distDir,
+		docsDir,
+		typesDir
+	], {
 
-	webpackStream( confModule, webpack )
-        .pipe( gulp.dest( './build/' ) )
-        .on( 'end', cb );
+		force: true,
+
+	} ).then( paths => {
+
+		cb();
+
+	} );
 
 }
 
-function buildESModulePackage( cb ){
+function buildUMDPackage( cb ) {
 
-	//module build
-	const confModule = require( './webpack/build-module.config' );
+	let cnt = 0;
+	
+	function builded() {
 
-	webpackStream( confModule, webpack )
-        .pipe( gulp.dest( './build/' ) )
-        .on( 'end', cb );
+		cnt++;
+		if( cnt == 2 ) cb();
+		
+	}
+	
+	webpackStream( require( "./config/webpack/umd.webpack.config" ), webpack ).on( 'error', function ( e ) { this.emit( 'end' ); } )
+		.pipe( gulp.dest( distDir ) )
+		.unpipe( browserSync.reload() )
+		.on('end', builded );
+
+	webpackStream( require( "./config/webpack/umd-min.webpack.config" ), webpack ).on( 'error', function ( e ) { this.emit( 'end' ); } )
+		.pipe( gulp.dest( distDir ) )
+		.unpipe( browserSync.reload() )
+		.on('end', builded );
+
 }
 
-function buildDocs( cb ){
+function buildESModulePackage( cb ) {
 
-    gulp.src( srcDir )
-        .pipe( typedoc({
-            module: "umd",
-            target: "es6",
-            out: "./docs/",
-            mode: "file",
-            name: info.packageName,
+	return webpackStream( require( "./config/webpack/module.webpack.config" ), webpack ).on( 'error', function ( e ) { this.emit( 'end' ); } )
+		.pipe( gulp.dest( distDir ) )
+		.unpipe( browserSync.reload() )
+		.on('end', cb );
+
+}
+
+function buildDocs( cb ) {
+
+	gulp.src( srcDir )
+		.pipe( typedoc( {
+			module: "umd",
+			target: "es6",
+			out: docsDir,
+			mode: "file",
+			name: info.packageName,
     		moduleResolution: "node",
-        }))
-        .on( 'end', cb );
+		} ) )
+		.on( 'end', cb );
 
 }
 
-function brSync(){
+function brSync() {
 
-    browserSync.init({
-        server: {
-            baseDir: './',
-        },
-        notify: false,
-        ghostMode: false,
-        open: 'external',
-        startPath: exampleDir + '/index.html',
-    });
+	browserSync.init( {
+		server: {
+			baseDir: './',
+		},
+		notify: false,
+		ghostMode: false,
+		open: 'external',
+		startPath: exampleDir,
+	} );
 
 }
 
 function reload( cb ) {
 
-    browserSync.reload();
+	browserSync.reload();
 
-    cb();
-    
-}
-
-function watch(){
-
-    gulp.watch( srcDir + '/**/*.ts', gulp.series( buildESModulePackage, reload ) );
-    gulp.watch( exampleDir + '/**/*', reload );
+	cb();
 
 }
 
-let develop = gulp.series( 
-    gulp.parallel( buildESModulePackage ),
-    gulp.parallel( brSync, watch ),
+function watch() {
+
+	gulp.watch( srcDir + '/**/*', gulp.series( buildESModulePackage, reload ) );
+	gulp.watch( exampleDir + '/**/*', reload );
+
+}
+
+let develop = gulp.series(
+	gulp.parallel( buildESModulePackage ),
+	gulp.parallel( brSync, watch ),
 );
 
 exports.default = develop;
-exports.build = gulp.series( cleanBuildFiles, buildMinPackage, buildESModulePackage, buildTypes,buildDocs, develop );
+exports.build = gulp.series( cleanBuildFiles, buildUMDPackage, buildESModulePackage, buildTypes, buildDocs, develop );
+

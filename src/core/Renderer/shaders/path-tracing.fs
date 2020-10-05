@@ -27,8 +27,8 @@ varying vec2 vUv;
 
 #define MAX_BOUNCE 8
 
-$constants
-$random
+#pragma glslify: import( './constants.glsl' )
+#pragma glslify: random = require( './random.glsl' )
 
 const float INF = 1e+10;
 const float EPS = 1e-5;

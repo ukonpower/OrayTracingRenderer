@@ -1,0 +1,5 @@
+var list = {
+	"core": [
+		"basic",
+	],
+};

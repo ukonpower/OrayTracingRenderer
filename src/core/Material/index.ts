@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
-import orayVert from './shaders/oray.vs';
-import orayFrag from './shaders/oray.fs';
+import orayTracingMaterialVert from './shaders/orayTracingMaterial.vs';
+import orayTracingMaterialFrag from './shaders/orayTracingMaterial.fs';
 
 export declare interface OrayShaderMaterialParam extends THREE.ShaderMaterialParameters {
 	baseMaterial?: THREE.Material | THREE.Material[];
@@ -22,8 +22,8 @@ export class Material extends THREE.ShaderMaterial {
 
 		param = param || {};
 
-		param.fragmentShader = param.fragmentShader || orayFrag;
-		param.vertexShader = param.vertexShader || orayVert;
+		param.fragmentShader = param.fragmentShader || orayTracingMaterialFrag;
+		param.vertexShader = param.vertexShader || orayTracingMaterialVert;
 		param.uniforms = param.uniforms || {};
 
 		if ( param.uniforms.renderType ) {

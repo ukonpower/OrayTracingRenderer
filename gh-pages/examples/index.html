@@ -1,0 +1,225 @@
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>PackageTemplateWebpack</title>
+</head>
+
+<link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600&display=swap" rel="stylesheet">
+<style>
+
+	* {
+		padding: 0;
+		margin: 0;
+		box-sizing: border-box;
+		--panel-width: 300px;
+	}
+
+	html, body {
+		width: 100%;
+		height: 100%;
+	}
+
+	.container {
+		position: relative;
+		width: 100%;
+		height: 100%;
+	}
+
+	#panel {
+		display: flex;
+		flex-direction: column;
+		background-color: #222;
+		position: absolute;
+		top: 0; left: 0;
+		width: var(--panel-width);
+		height: 100%;
+	}
+
+	.header {
+		padding: 20px 25px;
+		width: 100%;
+		
+		font-family: Comfortaa,'M PLUS Rounded 1c';
+		font-weight: 600;
+		color: #FFF;
+	}
+
+	.examples {
+		width: 100%;
+		padding: 0px 20px;
+		overflow-y: auto;
+		overflow-x: hidden;
+	}
+
+	.examples-category {
+		margin-bottom: 10px;
+		font-size: 18px;
+		color: #06F;
+	}
+
+	.examples-category-container {
+		margin-bottom: 10px;
+	}
+
+	.examples-list {
+		width: 100%;
+		padding-left: 10px;
+	}
+
+	.examples-list-item {
+		list-style: none;
+		margin-bottom: 2px;
+		width: 100%;
+	}
+
+	.examples-list-item-link {
+		text-decoration: none;
+		font-size: 17px;
+		color: #CCC;
+	}
+
+	.examples-list-item-link:hover {
+		color: #08F;
+	}
+
+	#viewer {
+		position: absolute;
+		top: 0; left: 0;
+		padding-left: var(--panel-width);
+		width: 100%;
+		height: 100%;
+		z-index: -99;
+	}
+	
+	
+</style>
+
+<body>
+	
+	<div class="container">
+		<div id="panel">
+			<h1 class="header">PackageTemp</h1>
+			<div class="examples">
+			</div>
+		</div>
+
+		<iframe id="viewer" frameborder="0"></iframe>
+
+	</div>
+
+	<script src="./list.js"></script>
+	<script>
+
+		function openLink( exampleName ) {
+
+			var viewer = document.querySelector( '#viewer' );
+
+			viewer.src = exampleName + '.html';			
+			
+		}
+
+		function onHashChange() {
+
+			let link = location.hash.substr( 1 );
+
+			openLink( link );
+
+		}
+
+		window.addEventListener( 'hashchange', onHashChange.bind( this ) );
+		
+		function createLink( exampleName ) {
+
+			var linkElm = document.createElement( 'a' );
+			linkElm.classList.add( 'examples-list-item-link' );
+			linkElm.href = exampleName + '.html';
+			linkElm.innerText = exampleName;
+			linkElm.addEventListener( 'click', function( event ) {
+
+				if( location.hash == '#' + exampleName ) {
+
+					openLink( exampleName );
+
+				} else {
+
+					location.hash = exampleName;
+
+				}
+
+				event.preventDefault();
+
+			} );
+
+			return linkElm;
+
+		}
+
+		function createExampleItem( exampleItemName ) {
+
+			var itemElm = document.createElement( 'li' );
+			itemElm.classList.add( 'examples-list-item' );
+			itemElm.appendChild( createLink( exampleItemName ) );
+
+			return itemElm;
+
+		}
+
+		function createExampleCategory( categoryName, categoryItems ) {
+
+			let categoryElm = document.createElement( 'div' );
+			categoryElm.classList.add( 'examples-category-container' );
+
+			var categoryNameElm = document.createElement( 'div' );
+			categoryNameElm.classList.add( 'examples-category' );
+			categoryNameElm.innerText = categoryName;
+			categoryElm.appendChild( categoryNameElm );
+
+			var exampleListElm = document.createElement( 'ul' );
+			exampleListElm.classList.add( 'examples-list' );
+
+			for( var i = 0; i < categoryItems.length; i ++ ) {
+
+				exampleListElm.appendChild( createExampleItem( categoryItems[ i ] ) );
+
+			}
+
+			categoryElm.appendChild( exampleListElm );
+
+			return categoryElm;
+			
+		}
+		
+		function createExamples( list ) {
+			
+			var examplesElm = document.querySelector( '.examples' );
+
+			var categoryNameList = Object.keys( list );
+
+			for( var i = 0; i < categoryNameList.length; i++ ) {
+				
+				var categoryName = categoryNameList[ i ];
+			
+				examplesElm.appendChild( createExampleCategory( categoryName, list[ categoryName ] ) );
+
+			}
+
+		}
+
+		createExamples( list );
+
+		if( window.location.hash ) {
+
+			openLink( window.location.hash.substr( 1 ) );
+			
+		} else {
+
+			let keys = Object.keys( list );
+			openLink( list[ keys[ 0 ] ][ 0 ] );
+			
+		}
+		
+	</script>
+
+</body>
+</html>
