@@ -95,45 +95,9 @@ export class Renderer extends GPUComputationController {
 
 		this.renderResultData = this.createData();
 
-		this.orayRenderTargets = {
-			albedo: new THREE.WebGLRenderTarget( this.dataSize.x * 2, this.dataSize.y * 2, {
-				magFilter: THREE.NearestFilter,
-				minFilter: THREE.NearestFilter,
-			} ),
-			emission: new THREE.WebGLRenderTarget( this.dataSize.x * 1, this.dataSize.y * 1, {
-				magFilter: THREE.NearestFilter,
-				minFilter: THREE.NearestFilter,
-				type: THREE.HalfFloatType
-			} ),
-			material: new THREE.WebGLRenderTarget( this.dataSize.x * 1, this.dataSize.y * 1, {
-				magFilter: THREE.NearestFilter,
-				minFilter: THREE.NearestFilter,
-			} ),
-			normal: new THREE.WebGLRenderTarget( this.dataSize.x * 1, this.dataSize.y * 1, {
-				magFilter: THREE.NearestFilter,
-				minFilter: THREE.NearestFilter,
-				type: THREE.FloatType,
-			} ),
-			depth: new THREE.WebGLRenderTarget( this.dataSize.x * 2, this.dataSize.y * 2, {
-				magFilter: THREE.NearestFilter,
-				minFilter: THREE.NearestFilter,
-				type: THREE.FloatType,
-			} ),
-			backNormal: new THREE.WebGLRenderTarget( this.dataSize.x * 1, this.dataSize.y * 1, {
-				magFilter: THREE.NearestFilter,
-				minFilter: THREE.NearestFilter,
-				type: THREE.FloatType,
-			} ),
-			backDepth: new THREE.WebGLRenderTarget( this.dataSize.x * 2, this.dataSize.y * 2, {
-				magFilter: THREE.NearestFilter,
-				minFilter: THREE.NearestFilter,
-				type: THREE.FloatType,
-			} ),
-		};
-
+		this.createRenderTargets();
 
 		this.renderScene = new THREE.Scene();
-
 		this.screen = new THREE.Mesh( new THREE.PlaneBufferGeometry( 2, 2 ), new THREE.ShaderMaterial( {
 			vertexShader: screenVert,
 			fragmentShader: screenFrag,
@@ -143,6 +107,49 @@ export class Renderer extends GPUComputationController {
 		this.renderScene.add( this.screen );
 
 	}
+
+	private createRenderTargets() {
+
+		this.orayRenderTargets = {
+			albedo: new THREE.WebGLRenderTarget( 0, 0, {
+				magFilter: THREE.NearestFilter,
+				minFilter: THREE.NearestFilter,
+			} ),
+			emission: new THREE.WebGLRenderTarget( 0, 0, {
+				magFilter: THREE.NearestFilter,
+				minFilter: THREE.NearestFilter,
+				type: THREE.HalfFloatType
+			} ),
+			material: new THREE.WebGLRenderTarget( 0, 0, {
+				magFilter: THREE.NearestFilter,
+				minFilter: THREE.NearestFilter,
+			} ),
+			normal: new THREE.WebGLRenderTarget( 0, 0, {
+				magFilter: THREE.NearestFilter,
+				minFilter: THREE.NearestFilter,
+				type: THREE.FloatType,
+			} ),
+			depth: new THREE.WebGLRenderTarget( 0, 0, {
+				magFilter: THREE.NearestFilter,
+				minFilter: THREE.NearestFilter,
+				type: THREE.FloatType,
+			} ),
+			backNormal: new THREE.WebGLRenderTarget( 0, 0, {
+				magFilter: THREE.NearestFilter,
+				minFilter: THREE.NearestFilter,
+				type: THREE.FloatType,
+			} ),
+			backDepth: new THREE.WebGLRenderTarget( 0, 0, {
+				magFilter: THREE.NearestFilter,
+				minFilter: THREE.NearestFilter,
+				type: THREE.FloatType,
+			} ),
+		};
+
+		this.resize( this.dataSize );
+
+	}
+
 	public render( scene: THREE.Scene, camera: THREE.PerspectiveCamera ) {
 
 		let renderTargetMem = this.renderer.getRenderTarget();
@@ -213,6 +220,20 @@ export class Renderer extends GPUComputationController {
 	public resetFrame() {
 
 		this.commonUniforms.frame.value = 0;
+
+	}
+
+	public resize( resolution: THREE.Vector2 ) {
+
+		this.resizeData( resolution );
+
+		this.orayRenderTargets.albedo.setSize( this.dataSize.x * 2, this.dataSize.y * 2 );
+		this.orayRenderTargets.emission.setSize( this.dataSize.x * 1, this.dataSize.y * 1 );
+		this.orayRenderTargets.material.setSize( this.dataSize.x * 1, this.dataSize.y * 1 );
+		this.orayRenderTargets.normal.setSize( this.dataSize.x * 1, this.dataSize.y * 1 );
+		this.orayRenderTargets.depth.setSize( this.dataSize.x * 2, this.dataSize.y * 2 );
+		this.orayRenderTargets.backNormal.setSize( this.dataSize.x * 1, this.dataSize.y * 1 );
+		this.orayRenderTargets.backDepth.setSize( this.dataSize.x * 2, this.dataSize.y * 2 );
 
 	}
 
