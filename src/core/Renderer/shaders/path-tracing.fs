@@ -1,13 +1,8 @@
-uniform vec2 dataSize;
 uniform mat4 cameraMatrixWorld;
 uniform mat4 cameraMatrixWorldInverse;
 uniform mat4 cameraProjectionMatrix;
 uniform mat4 cameraProjectionMatrixInverse;
 uniform mat4 projectionMatrix;
-
-uniform float roughness;
-uniform float metalness;
-uniform vec3 albedo;
 
 uniform float time;
 uniform float frame;
@@ -22,16 +17,14 @@ uniform sampler2D backNormalBuffer;
 uniform sampler2D backDepthBuffer;
 uniform samplerCube envMap;
 
-bool debug = false;
 varying vec2 vUv;
-
-#define MAX_BOUNCE 8
 
 #pragma glslify: import( './constants.glsl' )
 #pragma glslify: random = require( './random.glsl' )
 
-const float INF = 1e+10;
-const float EPS = 1e-5;
+#define MAX_BOUNCE 8
+#define INF 1e+10
+#define EPS 1e-5
 
 struct Ray {
 	vec3 origin;
