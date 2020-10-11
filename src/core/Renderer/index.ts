@@ -82,6 +82,12 @@ export class Renderer extends GPUComputationController {
 			},
 			frame: {
 				value: 0
+			},
+			dofRadius: {
+				value: 0.9
+			},
+			focalDistance: {
+				value: 10.0
 			}
 		};
 

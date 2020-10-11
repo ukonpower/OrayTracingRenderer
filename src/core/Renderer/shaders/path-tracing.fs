@@ -4,6 +4,9 @@ uniform mat4 cameraProjectionMatrix;
 uniform mat4 cameraProjectionMatrixInverse;
 uniform mat4 projectionMatrix;
 
+uniform float focalDistance;
+uniform float dofRadius;
+
 uniform float time;
 uniform float frame;
 
@@ -290,16 +293,27 @@ void main( void ) {
 	vec4 befTex = texture2D( backBuffer, vUv ) * min( frame, 1.0 ) ;
 
 	Ray ray;
-	// ray.origin = cameraPosition;
-	// ray.direction = ( cameraProjectionMatrixInverse * vec4( vUv * 2.0 - 1.0, 1.0, 1.0 ) ).xyz;
-	
 	ray.origin = vec3( 0.0, 0.0, 0.0 );
 	ray.direction = ( cameraProjectionMatrixInverse * vec4( vUv * 2.0 - 1.0, 1.0, 1.0 ) ).xyz;
-	ray.direction.xy += vec2( random( vUv + sin( frame * 0.1) ) * 2.0 - 1.0 , random( vUv - cos( frame * 0.1 ) ) * 2.0 - 1.0 ) * 0.001;
 	ray.direction = normalize( ray.direction );
 
+	//random
+	float r1 = random( vUv + sin( frame * 0.1) );
+	float r2 = random( vUv - cos( frame * 0.1 ) );
+
+	//anti-aliasing
+	// ray.direction.xy += vec2( r1 * 2.0 - 1.0 , r2 * 2.0 - 1.0 ) * 0.001;
+
+	//DOF
+	float t1 = TPI * r1;
+	float t2 = r2;
+	vec3 offset = vec3(cos(t1)*r2, sin(t1)*t2, 0.0) * dofRadius;
+	vec3 p = ray.origin + ray.direction * (focalDistance);
+	ray.origin += offset;
+	ray.direction = normalize( p - ray.origin );
+	
 	vec4 o = vec4( ( befTex.xyz + radiance( ray ) ) , 1.0 );
+
 	gl_FragColor = o;
-
-
+	
 }

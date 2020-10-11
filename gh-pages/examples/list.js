@@ -1,5 +1,6 @@
 var list = {
-	"core": [
+	"General": [
 		"basic",
+		"dof",
 	],
 };
