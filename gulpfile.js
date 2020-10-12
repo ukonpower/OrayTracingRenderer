@@ -117,13 +117,13 @@ function reload( cb ) {
 
 function watch() {
 
-	gulp.watch( srcDir + '/**/*', gulp.series( buildESModulePackage, reload ) );
-	gulp.watch( exampleDir + '/**/*', reload );
+	gulp.watch( srcDir + '/**/*', gulp.series( buildESModulePackage ) );
+	gulp.watch( exampleDir + '/**/*', gulp.series( reload ) );
 
 }
 
 let develop = gulp.series(
-	gulp.parallel( buildESModulePackage ),
+	buildESModulePackage,
 	gulp.parallel( brSync, watch ),
 );
 
