@@ -83,8 +83,8 @@ export class Renderer extends GPUComputationController {
 			frame: {
 				value: 0
 			},
-			dofRadius: {
-				value: 0.9
+			dofBlurRadius: {
+				value: 0
 			},
 			focalDistance: {
 				value: 10.0
@@ -111,6 +111,18 @@ export class Renderer extends GPUComputationController {
 		} ) );
 
 		this.renderScene.add( this.screen );
+
+	}
+
+	public set focalDistance( value: number ) {
+
+		this.commonUniforms.focalDistance.value = value;
+
+	}
+
+	public set dofBlurRadius( value: number ) {
+
+		this.commonUniforms.dofBlurRadius.value = value;
 
 	}
 

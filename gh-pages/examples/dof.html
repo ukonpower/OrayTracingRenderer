@@ -20,6 +20,7 @@
 	
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.js"></script>
 	
+	<script src="https://cdn.jsdelivr.net/npm/tweakpane@1.5.5/dist/tweakpane.min.js"></script>
 	<script src="./utils/GLTFLoader.js"></script>
 	<script src="./utils/OrbitControls.js"></script>
 
@@ -27,11 +28,54 @@
 
 		import * as OrayTracingRenderer from '../../build/oray-tracing-renderer.module.js';
 
+		/*------------------------
+			Init TweakPane
+		------------------------*/
+
+		let params = {
+			dofBlurRadius: 0.15,
+			focalDistance: 7
+		}
+		
+		let pane = new Tweakpane();
+		pane.addInput( params, 'dofBlurRadius', {
+			min: 0, max: 1.0,
+		} );
+		pane.addInput( params, 'focalDistance', {
+			min: 0, max: 20,
+		} );
+		
+		let updateParams = () => {
+
+			let keys = Object.keys( params );
+			for( let i = 0; i < keys.length; i++ ) {
+
+				orayRenderer[keys[i]] = params[keys[i]];
+				
+			}
+
+			orayRenderer.resetFrame();
+
+		}
+		
+		pane.on( 'change', updateParams );
+		
+		
+		/*------------------------
+			Init Renderers	
+		------------------------*/
+
 		let renderer = new THREE.WebGLRenderer({
 			canvas: document.querySelector( '#canvas' ),
 		})
 
-		let orayRenderer = new OrayTracingRenderer.Renderer( renderer, new THREE.Vector2( window.innerWidth, window.innerHeight ).multiplyScalar( 1.0 ) );
+		let orayRenderer = new OrayTracingRenderer.Renderer( renderer, new THREE.Vector2( 0, 0 ) );
+		updateParams();
+		
+		/*------------------------
+			Init Scene
+		------------------------*/
+		
 		let scene = new THREE.Scene();
 		let camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 0.1, 1000 );
 		camera.position.set( 3, 3, 10 );
@@ -65,6 +109,11 @@
 				}
 
 			} );
+
+			let light = new THREE.Mesh( new THREE.SphereBufferGeometry(0.1), new OrayTracingRenderer.Material({
+				emission: new THREE.Vector3( 10.0, 10.0, 10.0 )
+			}))
+			scene.add( light );
 
 			orayRenderer.resetFrame();
 

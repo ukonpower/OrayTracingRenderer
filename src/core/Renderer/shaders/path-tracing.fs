@@ -5,7 +5,7 @@ uniform mat4 cameraProjectionMatrixInverse;
 uniform mat4 projectionMatrix;
 
 uniform float focalDistance;
-uniform float dofRadius;
+uniform float dofBlurRadius;
 
 uniform float time;
 uniform float frame;
@@ -298,7 +298,7 @@ void main( void ) {
 	ray.direction = normalize( ray.direction );
 
 	//random
-	float r1 = random( vUv + sin( frame * 0.1) );
+	float r1 = random( vUv + sin( frame * 0.1 ) );
 	float r2 = random( vUv - cos( frame * 0.1 ) );
 
 	//anti-aliasing
@@ -306,8 +306,8 @@ void main( void ) {
 
 	//DOF
 	float t1 = TPI * r1;
-	float t2 = r2;
-	vec3 offset = vec3(cos(t1)*r2, sin(t1)*t2, 0.0) * dofRadius;
+	float t2 = sqrt( r2 );
+	vec3 offset = vec3(cos(t1)*t2, sin(t1)*t2, 0.0) * (dofBlurRadius + 0.0);
 	vec3 p = ray.origin + ray.direction * (focalDistance);
 	ray.origin += offset;
 	ray.direction = normalize( p - ray.origin );
