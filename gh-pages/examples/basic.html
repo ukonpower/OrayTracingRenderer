@@ -19,13 +19,11 @@
 	<canvas id="canvas"></canvas>
 	
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.js"></script>
-	
+	<script src="../../build/oray-tracing-renderer.js"></script>
 	<script src="./utils/GLTFLoader.js"></script>
 	<script src="./utils/OrbitControls.js"></script>
 
 	<script type="module">
-
-		import * as OrayTracingRenderer from '../../build/oray-tracing-renderer.module.js';
 
 		let renderer = new THREE.WebGLRenderer({
 			canvas: document.querySelector( '#canvas' ),
