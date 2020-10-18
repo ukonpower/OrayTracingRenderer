@@ -16,6 +16,7 @@ varying float vDepth;
 varying vec4 vPos;
 varying vec3 vViewPosition;
 
+//https://github.com/mrdoob/three.js/blob/dev/src/renderers/shaders/ShaderChunk/normalmap_pars_fragment.glsl.js
 vec3 perturbNormal2Arb( vec3 eye_pos, vec3 surf_norm, vec3 mapN ) {
 
 	// Workaround for Adreno 3XX dFd*( vec3 ) bug. See #9988
