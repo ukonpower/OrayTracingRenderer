@@ -298,7 +298,6 @@ vec3 radiance( inout Ray ray ) {
 
 	return col;
 	
-	
 }
 
 void main( void ) {

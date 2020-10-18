@@ -282,13 +282,13 @@ export class Renderer extends GPUComputationController {
 
 		this.resizeData( resolution );
 
-		this.orayRenderTargets.albedo.setSize( this.dataSize.x * 2, this.dataSize.y * 2 );
-		this.orayRenderTargets.emission.setSize( this.dataSize.x * 1, this.dataSize.y * 1 );
-		this.orayRenderTargets.material.setSize( this.dataSize.x * 1, this.dataSize.y * 1 );
-		this.orayRenderTargets.normal.setSize( this.dataSize.x * 1, this.dataSize.y * 1 );
-		this.orayRenderTargets.depth.setSize( this.dataSize.x * 2, this.dataSize.y * 2 );
-		this.orayRenderTargets.backNormal.setSize( this.dataSize.x * 1, this.dataSize.y * 1 );
-		this.orayRenderTargets.backDepth.setSize( this.dataSize.x * 2, this.dataSize.y * 2 );
+		this.orayRenderTargets.albedo.setSize( this.dataSize.x, this.dataSize.y );
+		this.orayRenderTargets.emission.setSize( this.dataSize.x, this.dataSize.y );
+		this.orayRenderTargets.material.setSize( this.dataSize.x, this.dataSize.y );
+		this.orayRenderTargets.normal.setSize( this.dataSize.x, this.dataSize.y );
+		this.orayRenderTargets.depth.setSize( this.dataSize.x, this.dataSize.y );
+		this.orayRenderTargets.backNormal.setSize( this.dataSize.x, this.dataSize.y );
+		this.orayRenderTargets.backDepth.setSize( this.dataSize.x, this.dataSize.y );
 
 	}
 
