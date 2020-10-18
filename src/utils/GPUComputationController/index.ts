@@ -140,7 +140,9 @@ export class GPUComputationController {
 
     	if ( initTex ) {
 
-    		let initKernel = this.createKernel( passThroughFrag );
+    		let initKernel = this.createKernel( {
+				fragmentShader: passThroughFrag
+			} );
 
     		initKernel.uniforms.tex = { value: initTex };
 
@@ -152,16 +154,14 @@ export class GPUComputationController {
 
 	}
 
-	public createKernel( shader: string, uniforms?: any ): GPUComputationKernel {
+	public createKernel( param: THREE.ShaderMaterialParameters ): GPUComputationKernel {
 
-    	let uni = this.CopyUniforms( {}, uniforms );
+    	let uni = this.CopyUniforms( {}, param.uniforms );
     	uni = this.CopyUniforms( uni, this.uniforms );
 
-    	let mat = new THREE.ShaderMaterial( {
-    		vertexShader: vert,
-    		fragmentShader: shader,
-    		uniforms: uni
-    	} );
+		param.vertexShader = param.vertexShader || vert;
+
+    	let mat = new THREE.ShaderMaterial( param );
 
     	this.materials.push( mat );
 

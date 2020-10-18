@@ -33,7 +33,7 @@
 		------------------------*/
 
 		let params = {
-			dofBlurRadius: 0.15,
+			dofBlurRadius: 0.0,
 			focalDistance: 7
 		}
 		
@@ -86,9 +86,20 @@
 			orayRenderer.resetFrame();
 			
 		} );
+		
+		let light = new THREE.DirectionalLight();
+		light.position.set( 1.0, 1.0, 1.0 );
+		light.intensity = 2.0;
+		scene.add( light );
+
+		scene.background = new THREE.Color( '#FFF' );
+		
+		/*------------------------
+			Load Model
+		------------------------*/	
 
 		let gltfLoader = new THREE.GLTFLoader();
-		gltfLoader.load( './assets/webgl-path-tracing.glb', ( gltf ) => {
+		gltfLoader.load( './assets/lights.glb', ( gltf ) => {
 
 			scene.add( gltf.scene );
 
@@ -100,25 +111,14 @@
 						baseMaterial: obj.material
 					} );
 
-					if ( obj.name.indexOf( 'Light' ) > - 1 ) {
-
-						obj.material.emission = new THREE.Vector3( 10, 10, 10 );
-
-					}
-
 				}
 
 			} );
 
-			let light = new THREE.Mesh( new THREE.SphereBufferGeometry(0.1), new OrayTracingRenderer.Material({
-				emission: new THREE.Vector3( 10.0, 10.0, 10.0 )
-			}))
-			scene.add( light );
-
 			orayRenderer.resetFrame();
 
 		} );
-		
+
 		onResize();
 		animate();
 		

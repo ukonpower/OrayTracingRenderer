@@ -22,12 +22,14 @@ uniform samplerCube envMap;
 
 varying vec2 vUv;
 
-#pragma glslify: import( './constants.glsl' )
 #pragma glslify: random = require( './random.glsl' )
 
 #define MAX_BOUNCE 8
 #define INF 1e+10
 #define EPS 1e-5
+
+#include <common>
+#include <lights_pars_begin>
 
 struct Ray {
 	vec3 origin;
@@ -103,7 +105,7 @@ vec3 diffuse( Intersection intersection, vec2 noise ) {
 	vec3 normal = intersection.normal;
 	
 	float r = sqrt( noise.x );
-	float theta = TPI * noise.y;
+	float theta = PI2 * noise.y;
 
 	vec3 tDir = vec3( r * cos( theta ), r * sin( theta ), sqrt( 1.0 - noise.x ) );
 	vec3 tangent = normalize( cross( normal, abs( normal.x ) > EPS ? vec3( 0.0, 1.0, 0.0 ) : vec3( 1.0, 0.0, 0.0 ) ) );
@@ -229,6 +231,17 @@ int shootRay( inout Intersection intersection, inout Ray ray, int bounce ) {
 		vec4 rayDir = vec4( ray.direction, 1.0 ) * cameraMatrixWorldInverse;
 		intersection.material.emission = textureCube( envMap, rayDir.xyz, 0.0 ).xyz * 2.5;
 
+		#if NUM_DIR_LIGHTS > 0
+
+			for ( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {
+
+				DirectionalLight dirLight = directionalLights[ i ];
+				intersection.material.emission += smoothstep( 0.95, 1.0, dot(dirLight.direction, ray.direction) ) * 20.0 * dirLight.color;
+				
+			}
+
+		#endif
+
 	}
 
 	return 0;
@@ -305,7 +318,7 @@ void main( void ) {
 	// ray.direction.xy += vec2( r1 * 2.0 - 1.0 , r2 * 2.0 - 1.0 ) * 0.001;
 
 	//DOF
-	float t1 = TPI * r1;
+	float t1 = PI2 * r1;
 	float t2 = sqrt( r2 );
 	vec3 offset = vec3(cos(t1)*t2, sin(t1)*t2, 0.0) * (dofBlurRadius + 0.0);
 	vec3 p = ray.origin + ray.direction * (focalDistance);

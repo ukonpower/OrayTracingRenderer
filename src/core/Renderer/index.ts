@@ -26,6 +26,7 @@ export class Renderer extends GPUComputationController {
 	private renderResultData: GPUcomputationData;
 
 	private renderScene: THREE.Scene;
+	private lights: THREE.Object3D;
 	private screen: THREE.Mesh;
 
 	constructor( renderer: THREE.WebGLRenderer, resolution: THREE.Vector2 ) {
@@ -34,7 +35,7 @@ export class Renderer extends GPUComputationController {
 
 		super( renderer, res );
 
-		this.commonUniforms = {
+		this.commonUniforms = THREE.UniformsUtils.merge( [ {
 			backBuffer: {
 				value: null
 			},
@@ -89,7 +90,7 @@ export class Renderer extends GPUComputationController {
 			focalDistance: {
 				value: 10.0
 			}
-		};
+		}, THREE.UniformsLib.lights ] );
 
 		this.init();
 
@@ -97,7 +98,14 @@ export class Renderer extends GPUComputationController {
 
 	public init() {
 
-		this.renderKernel = this.createKernel( pathTracingFrag, this.commonUniforms );
+		this.lights = new THREE.Object3D();
+		this.scene.add( this.lights );
+
+		this.renderKernel = this.createKernel( {
+			fragmentShader: pathTracingFrag,
+			uniforms: this.commonUniforms,
+			lights: true
+		} );
 
 		this.renderResultData = this.createData();
 
@@ -168,6 +176,33 @@ export class Renderer extends GPUComputationController {
 
 	}
 
+	private updateLights( scene: THREE.Scene ) {
+
+		for ( let i = this.lights.children.length - 1; i >= 0; i -- ) {
+
+			this.lights.remove( this.lights.children[ i ] );
+
+		}
+
+		scene.traverse( ( obj ) => {
+
+			if ( ( obj as THREE.Light ).isLight ) {
+
+				let wPos = obj.getWorldPosition( new THREE.Vector3() );
+				let wQua = obj.getWorldQuaternion( new THREE.Quaternion() );
+
+				let light = ( obj as THREE.Light ).clone();
+				light.position.copy( wPos );
+				light.quaternion.copy( wQua );
+
+				this.lights.add( light );
+
+			}
+
+		} );
+
+	}
+
 	public render( scene: THREE.Scene, camera: THREE.PerspectiveCamera ) {
 
 		let renderTargetMem = this.renderer.getRenderTarget();
@@ -200,6 +235,8 @@ export class Renderer extends GPUComputationController {
 			}
 
 			scene.background = background;
+
+			this.updateLights( scene );
 
 		}
 
