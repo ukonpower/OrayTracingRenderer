@@ -205,7 +205,6 @@ int shootRay( inout Intersection intersection, inout Ray ray, int bounce ) {
 
 	}
 
-
 	if( intersection.hit ) {
 
 		float seed =  frame * 0.001 + float( bounce );
