@@ -153,42 +153,24 @@ int shootRay( inout Intersection intersection, inout Ray ray, int bounce ) {
 		float texDepthFrontClip;
 		float texDepthBackClip;
 
-		for( int j = 0; j < 1; j ++ ) {
-
-			startPosClip = getScreenPos( intersection.position );
-			nextPosClip = getScreenPos( intersection.nextPosition );
-			
-			nextPosUV = nextPosClip.xy * 0.5 + 0.5;
-
-			texDepthFront = texture2D( depthBuffer, nextPosUV );
-			texDepthFrontClip = texDepthFront.x / texDepthFront.w;
-
-			texDepthBack = texture2D( backDepthBuffer, nextPosUV );
-			texDepthBackClip = texDepthBack.x / texDepthBack.w;
-
-			if(
-				( nextPosClip.z >= texDepthFrontClip && startPosClip.z <= texDepthBackClip ) && texDepthFrontClip != 0.0 
-			) {
-
-				intersection.hit = true;
-				intersection.nextPosition = ( intersection.position + intersection.nextPosition ) / 2.0;
-
-			} else {
-
-				if( j == 0 ) {
-
-					break;
-					
-				} else {
-
-					vec3 nextPos = intersection.nextPosition + ( intersection.nextPosition - intersection.position ) / 2.0;
-					intersection.position = intersection.nextPosition;
-					intersection.nextPosition = nextPos;
-
-				}
-
-			}
+		startPosClip = getScreenPos( intersection.position );
+		nextPosClip = getScreenPos( intersection.nextPosition );
 		
+		nextPosUV = nextPosClip.xy * 0.5 + 0.5;
+
+		texDepthFront = texture2D( depthBuffer, nextPosUV );
+		texDepthFrontClip = texDepthFront.x / texDepthFront.w;
+
+		texDepthBack = texture2D( backDepthBuffer, nextPosUV );
+		texDepthBackClip = texDepthBack.x / texDepthBack.w;
+
+		if(
+			( nextPosClip.z >= texDepthFrontClip && startPosClip.z <= texDepthBackClip ) && texDepthFrontClip != 0.0 
+		) {
+
+			intersection.hit = true;
+			intersection.nextPosition = ( intersection.position + intersection.nextPosition ) / 2.0;
+
 		}
 
 		if( intersection.hit ) {
@@ -203,6 +185,7 @@ int shootRay( inout Intersection intersection, inout Ray ray, int bounce ) {
 			intersection.material = mat;
 			intersection.normal = normalize( texture2D( normalBuffer, nextPosUV ).xyz * 2.0 - 1.0 );
 			intersection.position = ( cameraProjectionMatrixInverse * vec4( (nextPosUV * 2.0 - 1.0) * texDepthFront.w, texDepthFrontClip, texDepthFront.w ) ).xyz;
+			
 			break;
 			
 		}
@@ -272,7 +255,6 @@ vec3 radiance( inout Ray ray ) {
 		int type = shootRay( intersection, ray, i );
 		Material mat = intersection.material;
 
-		// vec3 col = mix( vec3( type == 0 ? 1.0 : 0.0 ), mat.albedo, type == 0 ? mat.metalness : 1.0 - mat.metalness );
 		vec3 col;
 
 		if ( type > 0 ) {
