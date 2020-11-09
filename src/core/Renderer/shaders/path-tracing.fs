@@ -100,6 +100,12 @@ vec3 ggx( Intersection intersection, Ray ray, vec2 noise )
 
 }
 
+float fresnel( float f0, float dVH ) {
+	
+	return f0 + ( 1.0 - f0 ) * pow( 1.0 - dVH, 2.0 );
+
+}
+
 vec3 diffuse( Intersection intersection, vec2 noise ) {
 
 	vec3 normal = intersection.normal;
@@ -212,7 +218,13 @@ int shootRay( inout Intersection intersection, inout Ray ray, int bounce ) {
 
 		ray.origin = intersection.position;
 
-		if( random( vUv * 10.0 + sin( time + float( frame ) + seed ) ) > 0.5 * ( 1.0 - intersection.material.roughness * ( 1.0 - intersection.material.metalness )  ) + intersection.material.metalness * 0.5 ) {
+		vec3 v = normalize( - intersection.position );
+		float dvh = dot( v, intersection.normal );
+
+		float rnd = random( vUv * 10.0 + sin( time + float( frame ) + seed ) );
+		float specular = fresnel( 0.04 + intersection.material.metalness * 0.96, dvh );
+
+		if( rnd > specular ) {
 			
 			ray.direction = diffuse( intersection, noise );
 			
@@ -221,6 +233,7 @@ int shootRay( inout Intersection intersection, inout Ray ray, int bounce ) {
 		} else {
 
 			ray.direction = ggx( intersection, ray, noise );
+
 			return 1;
 
 		}
