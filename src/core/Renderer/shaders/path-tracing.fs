@@ -24,7 +24,9 @@ varying vec2 vUv;
 
 #pragma glslify: random = require( './random.glsl' )
 
-#define MAX_BOUNCE 8
+#define MAX_BOUNCE 5
+#define MAX_STEP 50
+#define RAY_DISTANCE 1.0
 #define INF 1e+10
 #define EPS 1e-5
 
@@ -121,8 +123,6 @@ vec3 diffuse( Intersection intersection, vec2 noise ) {
 
 }
 
-#define MAX_STEP 100
-
 bool checkIntersect( inout vec3 startPos, inout vec3 nextPos ) {
 
 	return false;
@@ -144,7 +144,7 @@ int shootRay( inout Intersection intersection, inout Ray ray, int bounce ) {
 
 	for( int i = 0; i < MAX_STEP; i++ ) {
 		
-		intersection.nextPosition = intersection.position + ray.direction * 0.5;
+		intersection.nextPosition = intersection.position + ray.direction * RAY_DISTANCE;
 		vec3 startPosClip;
 		vec3 nextPosClip;
 		vec2 nextPosUV;
@@ -264,51 +264,41 @@ vec3 radiance( inout Ray ray ) {
 
 	Intersection intersection;
 
-	float memMetalness[MAX_BOUNCE];
-	vec3 memAlbedo[MAX_BOUNCE];
-	vec3 memEmission[MAX_BOUNCE];
-	int memDir[MAX_BOUNCE];
+	vec3 acc = vec3( 0.0 );
+	vec3 ref = vec3( 1.0 );
 
-	int bounce;
-	
 	for ( int i = 0; i < MAX_BOUNCE; i++ ) {
 
-		memDir[i] = shootRay( intersection, ray, i );
-		memAlbedo[i] = intersection.material.albedo;
-		memEmission[i] = intersection.material.emission;
-		memMetalness[i] = intersection.material.metalness;
+		int type = shootRay( intersection, ray, i );
+		Material mat = intersection.material;
 
-		if( !intersection.hit ) {
+		// vec3 col = mix( vec3( type == 0 ? 1.0 : 0.0 ), mat.albedo, type == 0 ? mat.metalness : 1.0 - mat.metalness );
+		vec3 col;
 
-			bounce = i;
-
-			break;
-			
-		}
-	}
-
-	vec3 emission = memEmission[ MAX_BOUNCE - 1 ];
-	vec3 col;
-
-	for ( int i = MAX_BOUNCE -1; i >= 0 ; i-- ) {
-
-		if ( memDir[ i ] > 0 ) {
+		if ( type > 0 ) {
 
 			//ggx
-			col *= mix( vec3( 1.0 ), memAlbedo[i], memMetalness[ i ] );
+			col = mix( vec3( 1.0 ), mat.albedo, mat.metalness );
 
 		} else {
 			
 			//diffuse
-			col *= mix( vec3( 0.0 ), memAlbedo[i], 1.0 - memMetalness[ i ] );
+			col = mix( vec3( 0.0 ), mat.albedo, 1.0 - mat.metalness );
 
 		}
 
-		col += memEmission[ i ];
+		acc += ref * mat.emission;
+		ref *= col;
 
+		if( !intersection.hit ) {
+
+			break;
+			
+		}
+		
 	}
 
-	return col;
+	return acc;
 	
 }
 
