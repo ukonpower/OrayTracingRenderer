@@ -25,8 +25,8 @@ varying vec2 vUv;
 #pragma glslify: random = require( './random.glsl' )
 
 #define MAX_BOUNCE 5
-#define MAX_STEP 50
-#define RAY_DISTANCE 1.0
+#define MAX_STEP 70
+#define RAY_DISTANCE 0.7
 #define INF 1e+10
 #define EPS 1e-5
 
