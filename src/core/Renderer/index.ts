@@ -26,6 +26,7 @@ export class Renderer extends GPUComputationController {
 	private renderResultData: GPUcomputationData;
 
 	private renderScene: THREE.Scene;
+	private lights: THREE.Object3D;
 	private screen: THREE.Mesh;
 
 	constructor( renderer: THREE.WebGLRenderer, resolution: THREE.Vector2 ) {
@@ -34,7 +35,7 @@ export class Renderer extends GPUComputationController {
 
 		super( renderer, res );
 
-		this.commonUniforms = {
+		this.commonUniforms = THREE.UniformsUtils.merge( [ {
 			backBuffer: {
 				value: null
 			},
@@ -82,8 +83,14 @@ export class Renderer extends GPUComputationController {
 			},
 			frame: {
 				value: 0
+			},
+			dofBlurRadius: {
+				value: 0
+			},
+			focalDistance: {
+				value: 10.0
 			}
-		};
+		}, THREE.UniformsLib.lights ] );
 
 		this.init();
 
@@ -91,58 +98,111 @@ export class Renderer extends GPUComputationController {
 
 	public init() {
 
-		this.renderKernel = this.createKernel( pathTracingFrag, this.commonUniforms );
+		this.lights = new THREE.Object3D();
+		this.scene.add( this.lights );
+
+		this.renderKernel = this.createKernel( {
+			fragmentShader: pathTracingFrag,
+			uniforms: this.commonUniforms,
+			lights: true
+		} );
 
 		this.renderResultData = this.createData();
 
+		this.createRenderTargets();
+
+		this.renderScene = new THREE.Scene();
+		this.screen = new THREE.Mesh( new THREE.PlaneBufferGeometry( 2, 2 ), new THREE.ShaderMaterial( {
+			vertexShader: screenVert,
+			fragmentShader: screenFrag,
+			uniforms: this.commonUniforms
+		} ) );
+
+		this.renderScene.add( this.screen );
+
+	}
+
+	public set focalDistance( value: number ) {
+
+		this.commonUniforms.focalDistance.value = value;
+
+	}
+
+	public set dofBlurRadius( value: number ) {
+
+		this.commonUniforms.dofBlurRadius.value = value;
+
+	}
+
+	private createRenderTargets() {
+
 		this.orayRenderTargets = {
-			albedo: new THREE.WebGLRenderTarget( this.dataSize.x * 2, this.dataSize.y * 2, {
+			albedo: new THREE.WebGLRenderTarget( 0, 0, {
 				magFilter: THREE.NearestFilter,
 				minFilter: THREE.NearestFilter,
 			} ),
-			emission: new THREE.WebGLRenderTarget( this.dataSize.x * 1, this.dataSize.y * 1, {
+			emission: new THREE.WebGLRenderTarget( 0, 0, {
 				magFilter: THREE.NearestFilter,
 				minFilter: THREE.NearestFilter,
 				type: THREE.HalfFloatType
 			} ),
-			material: new THREE.WebGLRenderTarget( this.dataSize.x * 1, this.dataSize.y * 1, {
+			material: new THREE.WebGLRenderTarget( 0, 0, {
 				magFilter: THREE.NearestFilter,
 				minFilter: THREE.NearestFilter,
 			} ),
-			normal: new THREE.WebGLRenderTarget( this.dataSize.x * 1, this.dataSize.y * 1, {
-				magFilter: THREE.NearestFilter,
-				minFilter: THREE.NearestFilter,
-				type: THREE.FloatType,
-			} ),
-			depth: new THREE.WebGLRenderTarget( this.dataSize.x * 2, this.dataSize.y * 2, {
+			normal: new THREE.WebGLRenderTarget( 0, 0, {
 				magFilter: THREE.NearestFilter,
 				minFilter: THREE.NearestFilter,
 				type: THREE.FloatType,
 			} ),
-			backNormal: new THREE.WebGLRenderTarget( this.dataSize.x * 1, this.dataSize.y * 1, {
+			depth: new THREE.WebGLRenderTarget( 0, 0, {
 				magFilter: THREE.NearestFilter,
 				minFilter: THREE.NearestFilter,
 				type: THREE.FloatType,
 			} ),
-			backDepth: new THREE.WebGLRenderTarget( this.dataSize.x * 2, this.dataSize.y * 2, {
+			backNormal: new THREE.WebGLRenderTarget( 0, 0, {
+				magFilter: THREE.NearestFilter,
+				minFilter: THREE.NearestFilter,
+				type: THREE.FloatType,
+			} ),
+			backDepth: new THREE.WebGLRenderTarget( 0, 0, {
 				magFilter: THREE.NearestFilter,
 				minFilter: THREE.NearestFilter,
 				type: THREE.FloatType,
 			} ),
 		};
 
-
-		this.renderScene = new THREE.Scene();
-
-		this.screen = new THREE.Mesh( new THREE.PlaneBufferGeometry( 2, 2 ), new THREE.ShaderMaterial( {
-			vertexShader: screenVert,
-			fragmentShader: screenFrag,
-			uniforms: this.commonUniforms
-		}));
-
-		this.renderScene.add( this.screen );
+		this.resize( this.dataSize );
 
 	}
+
+	private updateLights( scene: THREE.Scene ) {
+
+		for ( let i = this.lights.children.length - 1; i >= 0; i -- ) {
+
+			this.lights.remove( this.lights.children[ i ] );
+
+		}
+
+		scene.traverse( ( obj ) => {
+
+			if ( ( obj as THREE.Light ).isLight ) {
+
+				let wPos = obj.getWorldPosition( new THREE.Vector3() );
+				let wQua = obj.getWorldQuaternion( new THREE.Quaternion() );
+
+				let light = ( obj as THREE.Light ).clone();
+				light.position.copy( wPos );
+				light.quaternion.copy( wQua );
+
+				this.lights.add( light );
+
+			}
+
+		} );
+
+	}
+
 	public render( scene: THREE.Scene, camera: THREE.PerspectiveCamera ) {
 
 		let renderTargetMem = this.renderer.getRenderTarget();
@@ -176,6 +236,8 @@ export class Renderer extends GPUComputationController {
 
 			scene.background = background;
 
+			this.updateLights( scene );
+
 		}
 
 		this.renderer.setRenderTarget( renderTargetMem );
@@ -207,13 +269,27 @@ export class Renderer extends GPUComputationController {
 		this.renderer.render( this.renderScene, camera );
 
 		this.commonUniforms.frame.value ++;
-		
+
 	}
 
 	public resetFrame() {
 
 		this.commonUniforms.frame.value = 0;
-		
+
+	}
+
+	public resize( resolution: THREE.Vector2 ) {
+
+		this.resizeData( resolution );
+
+		this.orayRenderTargets.albedo.setSize( this.dataSize.x, this.dataSize.y );
+		this.orayRenderTargets.emission.setSize( this.dataSize.x, this.dataSize.y );
+		this.orayRenderTargets.material.setSize( this.dataSize.x, this.dataSize.y );
+		this.orayRenderTargets.normal.setSize( this.dataSize.x, this.dataSize.y );
+		this.orayRenderTargets.depth.setSize( this.dataSize.x, this.dataSize.y );
+		this.orayRenderTargets.backNormal.setSize( this.dataSize.x, this.dataSize.y );
+		this.orayRenderTargets.backDepth.setSize( this.dataSize.x, this.dataSize.y );
+
 	}
 
 }

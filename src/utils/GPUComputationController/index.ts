@@ -27,21 +27,22 @@ export class GPUComputationController {
     protected tempDataLinear: GPUcomputationData;
     protected tempDataNear: GPUcomputationData;
 
+	private renderTargets: THREE.WebGLRenderTarget[] = [];
 
-    public get isSupported() : boolean {
+	public get isSupported() : boolean {
 
     	return this.renderer.extensions.get( "OES_texture_float" );
 
-    }
+	}
 
-    constructor( renderer: THREE.WebGLRenderer, dataSize: THREE.Vector2 ) {
+	constructor( renderer: THREE.WebGLRenderer, dataSize: THREE.Vector2 ) {
 
     	this.renderer = renderer;
     	this.dataSize = dataSize.clone();
 
     	this.uniforms = {
     		dataSize: {
-    			value: dataSize.clone()
+    			value: this.dataSize
     		}
     	};
 
@@ -62,9 +63,9 @@ export class GPUComputationController {
     	this.mesh = new THREE.Mesh( new THREE.PlaneBufferGeometry( 2, 2 ) );
     	this.scene.add( this.mesh );
 
-    }
+	}
 
-    public createInitializeTexture() {
+	public createInitializeTexture() {
 
     	let a = new Float32Array( this.uniforms.dataSize.value.x * this.uniforms.dataSize.value.y * 4 );
     	let texture = new THREE.DataTexture( a, this.uniforms.dataSize.value.x, this.uniforms.dataSize.value.y, THREE.RGBAFormat, THREE.FloatType );
@@ -72,17 +73,17 @@ export class GPUComputationController {
 
     	return texture;
 
-    }
+	}
 
-    public createData(): GPUcomputationData;
+	public createData(): GPUcomputationData;
 
-    public createData( initializeTexture: THREE.DataTexture ): GPUcomputationData;
+	public createData( initializeTexture: THREE.DataTexture ): GPUcomputationData;
 
-    public createData( textureParam: THREE.WebGLRenderTargetOptions ): GPUcomputationData;
+	public createData( textureParam: THREE.WebGLRenderTargetOptions ): GPUcomputationData;
 
-    public createData( initializeTexture: THREE.DataTexture, textureParam: THREE.WebGLRenderTargetOptions ): GPUcomputationData;
+	public createData( initializeTexture: THREE.DataTexture, textureParam: THREE.WebGLRenderTargetOptions ): GPUcomputationData;
 
-    public createData( initTex_texParam?: any, textureParam? : THREE.WebGLRenderTargetOptions ): GPUcomputationData {
+	public createData( initTex_texParam?: any, textureParam? : THREE.WebGLRenderTargetOptions ): GPUcomputationData {
 
     	let param: THREE.WebGLRenderTargetOptions = {
     		wrapS: THREE.ClampToEdgeWrapping,
@@ -133,11 +134,15 @@ export class GPUComputationController {
 
     	let buf = new THREE.WebGLRenderTarget( this.uniforms.dataSize.value.x, this.uniforms.dataSize.value.y, param );
 
-    	let data = { buffer: buf };
+		let data = { buffer: buf };
+
+		this.renderTargets.push( buf );
 
     	if ( initTex ) {
 
-    		let initKernel = this.createKernel( passThroughFrag );
+    		let initKernel = this.createKernel( {
+				fragmentShader: passThroughFrag
+			} );
 
     		initKernel.uniforms.tex = { value: initTex };
 
@@ -147,18 +152,16 @@ export class GPUComputationController {
 
     	return data;
 
-    }
+	}
 
-    public createKernel( shader: string, uniforms?: any ): GPUComputationKernel {
+	public createKernel( param: THREE.ShaderMaterialParameters ): GPUComputationKernel {
 
-    	let uni = this.CopyUniforms( {}, uniforms );
+    	let uni = this.CopyUniforms( {}, param.uniforms );
     	uni = this.CopyUniforms( uni, this.uniforms );
 
-    	let mat = new THREE.ShaderMaterial( {
-    		vertexShader: vert,
-    		fragmentShader: shader,
-    		uniforms: uni
-    	} );
+		param.vertexShader = param.vertexShader || vert;
+
+    	let mat = new THREE.ShaderMaterial( param );
 
     	this.materials.push( mat );
 
@@ -169,9 +172,9 @@ export class GPUComputationController {
 
     	return kernel;
 
-    }
+	}
 
-    public compute( kernel: GPUComputationKernel, data: GPUcomputationData, camera?: THREE.Camera ) {
+	public compute( kernel: GPUComputationKernel, data: GPUcomputationData, camera?: THREE.Camera ) {
 
     	let temp: GPUcomputationData;
 
@@ -197,17 +200,17 @@ export class GPUComputationController {
 
     	this.renderer.setRenderTarget( currentRenderTarget );
 
-    }
+	}
 
-    protected swapBuffers( b1: GPUcomputationData, b2: GPUcomputationData ) {
+	protected swapBuffers( b1: GPUcomputationData, b2: GPUcomputationData ) {
 
     	let tmp = b1.buffer;
     	b1.buffer = b2.buffer;
     	b2.buffer = tmp;
 
-    }
+	}
 
-    public dispose() {
+	public dispose() {
 
     	let geo = this.mesh.geometry;
     	geo.dispose();
@@ -223,9 +226,9 @@ export class GPUComputationController {
     	this.tempDataLinear.buffer.dispose();
     	this.tempDataNear.buffer.dispose();
 
-    }
+	}
 
-    private CopyUniforms( uni1: any, uni2: any ) {
+	private CopyUniforms( uni1: any, uni2: any ) {
 
     	if ( ! uni1 || ! uni2 ) return uni1 || uni2;
 
@@ -243,6 +246,20 @@ export class GPUComputationController {
 
     	return uni1;
 
-    }
+	}
+
+	public resizeData( dataSize: THREE.Vector2 ) {
+
+		this.dataSize.copy( dataSize );
+
+		for ( let i = 0; i < this.renderTargets.length; i ++ ) {
+
+			let target = this.renderTargets[ i ];
+
+			target.setSize( dataSize.x, dataSize.y );
+
+		}
+
+	}
 
 }

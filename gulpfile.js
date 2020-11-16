@@ -46,32 +46,18 @@ function cleanBuildFiles( cb ) {
 
 }
 
-function buildUMDPackage( cb ) {
-
-	let cnt = 0;
-	
-	function builded() {
-
-		cnt++;
-		if( cnt == 2 ) cb();
-		
-	}
-	
-	webpackStream( require( "./config/webpack/umd.webpack.config" ), webpack ).on( 'error', function ( e ) { this.emit( 'end' ); } )
-		.pipe( gulp.dest( distDir ) )
-		.unpipe( browserSync.reload() )
-		.on('end', builded );
+function umdBuildProduction( cb ) {
 
 	webpackStream( require( "./config/webpack/umd-min.webpack.config" ), webpack ).on( 'error', function ( e ) { this.emit( 'end' ); } )
 		.pipe( gulp.dest( distDir ) )
 		.unpipe( browserSync.reload() )
-		.on('end', builded );
+		.on('end', cb );
 
 }
 
-function buildESModulePackage( cb ) {
-
-	return webpackStream( require( "./config/webpack/module.webpack.config" ), webpack ).on( 'error', function ( e ) { this.emit( 'end' ); } )
+function umdBuildDevelopment( cb ) {
+	
+	return webpackStream( require( "./config/webpack/umd.webpack.config" ), webpack ).on( 'error', function ( e ) { this.emit( 'end' ); } )
 		.pipe( gulp.dest( distDir ) )
 		.unpipe( browserSync.reload() )
 		.on('end', cb );
@@ -117,16 +103,16 @@ function reload( cb ) {
 
 function watch() {
 
-	gulp.watch( srcDir + '/**/*', gulp.series( buildESModulePackage, reload ) );
-	gulp.watch( exampleDir + '/**/*', reload );
+	gulp.watch( srcDir + '/**/*', gulp.series( umdBuildDevelopment ) );
+	gulp.watch( exampleDir + '/**/*', gulp.series( reload ) );
 
 }
 
 let develop = gulp.series(
-	gulp.parallel( buildESModulePackage ),
+	umdBuildDevelopment,
 	gulp.parallel( brSync, watch ),
 );
 
 exports.default = develop;
-exports.build = gulp.series( cleanBuildFiles, buildUMDPackage, buildESModulePackage, buildTypes, buildDocs, develop );
+exports.build = gulp.series( cleanBuildFiles, umdBuildProduction, umdBuildDevelopment, buildTypes, buildDocs, develop );
 

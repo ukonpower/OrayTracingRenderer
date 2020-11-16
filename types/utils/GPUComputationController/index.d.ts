@@ -16,6 +16,7 @@ export declare class GPUComputationController {
     protected materials: THREE.ShaderMaterial[];
     protected tempDataLinear: GPUcomputationData;
     protected tempDataNear: GPUcomputationData;
+    private renderTargets;
     get isSupported(): boolean;
     constructor(renderer: THREE.WebGLRenderer, dataSize: THREE.Vector2);
     createInitializeTexture(): THREE.DataTexture;
@@ -23,9 +24,10 @@ export declare class GPUComputationController {
     createData(initializeTexture: THREE.DataTexture): GPUcomputationData;
     createData(textureParam: THREE.WebGLRenderTargetOptions): GPUcomputationData;
     createData(initializeTexture: THREE.DataTexture, textureParam: THREE.WebGLRenderTargetOptions): GPUcomputationData;
-    createKernel(shader: string, uniforms?: any): GPUComputationKernel;
+    createKernel(param: THREE.ShaderMaterialParameters): GPUComputationKernel;
     compute(kernel: GPUComputationKernel, data: GPUcomputationData, camera?: THREE.Camera): void;
     protected swapBuffers(b1: GPUcomputationData, b2: GPUcomputationData): void;
     dispose(): void;
     private CopyUniforms;
+    resizeData(dataSize: THREE.Vector2): void;
 }

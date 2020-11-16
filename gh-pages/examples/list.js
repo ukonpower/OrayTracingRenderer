@@ -1,5 +1,10 @@
 var list = {
-	"core": [
+	"General": [
 		"basic",
+		"dof",
+		"lights",
 	],
+	"Test": [
+		"render-speed"
+	]
 };

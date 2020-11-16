@@ -1,13 +1,11 @@
-uniform vec2 dataSize;
 uniform mat4 cameraMatrixWorld;
 uniform mat4 cameraMatrixWorldInverse;
 uniform mat4 cameraProjectionMatrix;
 uniform mat4 cameraProjectionMatrixInverse;
 uniform mat4 projectionMatrix;
 
-uniform float roughness;
-uniform float metalness;
-uniform vec3 albedo;
+uniform float focalDistance;
+uniform float dofBlurRadius;
 
 uniform float time;
 uniform float frame;
@@ -22,16 +20,18 @@ uniform sampler2D backNormalBuffer;
 uniform sampler2D backDepthBuffer;
 uniform samplerCube envMap;
 
-bool debug = false;
 varying vec2 vUv;
 
-#define MAX_BOUNCE 8
-
-#pragma glslify: import( './constants.glsl' )
 #pragma glslify: random = require( './random.glsl' )
 
-const float INF = 1e+10;
-const float EPS = 1e-5;
+#define MAX_BOUNCE 5
+#define MAX_STEP 70
+#define RAY_DISTANCE 0.7
+#define INF 1e+10
+#define EPS 1e-5
+
+#include <common>
+#include <lights_pars_begin>
 
 struct Ray {
 	vec3 origin;
@@ -102,12 +102,18 @@ vec3 ggx( Intersection intersection, Ray ray, vec2 noise )
 
 }
 
+float fresnel( float f0, float dVH ) {
+	
+	return f0 + ( 1.0 - f0 ) * pow( 1.0 - dVH, 2.0 );
+
+}
+
 vec3 diffuse( Intersection intersection, vec2 noise ) {
 
 	vec3 normal = intersection.normal;
 	
 	float r = sqrt( noise.x );
-	float theta = TPI * noise.y;
+	float theta = PI2 * noise.y;
 
 	vec3 tDir = vec3( r * cos( theta ), r * sin( theta ), sqrt( 1.0 - noise.x ) );
 	vec3 tangent = normalize( cross( normal, abs( normal.x ) > EPS ? vec3( 0.0, 1.0, 0.0 ) : vec3( 1.0, 0.0, 0.0 ) ) );
@@ -116,8 +122,6 @@ vec3 diffuse( Intersection intersection, vec2 noise ) {
 	return tangent * tDir.x + binormal * tDir.y + normal * tDir.z;
 
 }
-
-#define MAX_STEP 100
 
 bool checkIntersect( inout vec3 startPos, inout vec3 nextPos ) {
 
@@ -140,7 +144,7 @@ int shootRay( inout Intersection intersection, inout Ray ray, int bounce ) {
 
 	for( int i = 0; i < MAX_STEP; i++ ) {
 		
-		intersection.nextPosition = intersection.position + ray.direction * 0.5;
+		intersection.nextPosition = intersection.position + ray.direction * RAY_DISTANCE;
 		vec3 startPosClip;
 		vec3 nextPosClip;
 		vec2 nextPosUV;
@@ -149,42 +153,24 @@ int shootRay( inout Intersection intersection, inout Ray ray, int bounce ) {
 		float texDepthFrontClip;
 		float texDepthBackClip;
 
-		for( int j = 0; j < 1; j ++ ) {
-
-			startPosClip = getScreenPos( intersection.position );
-			nextPosClip = getScreenPos( intersection.nextPosition );
-			
-			nextPosUV = nextPosClip.xy * 0.5 + 0.5;
-
-			texDepthFront = texture2D( depthBuffer, nextPosUV );
-			texDepthFrontClip = texDepthFront.x / texDepthFront.w;
-
-			texDepthBack = texture2D( backDepthBuffer, nextPosUV );
-			texDepthBackClip = texDepthBack.x / texDepthBack.w;
-
-			if(
-				( nextPosClip.z >= texDepthFrontClip && startPosClip.z <= texDepthBackClip ) && texDepthFrontClip != 0.0 
-			) {
-
-				intersection.hit = true;
-				intersection.nextPosition = ( intersection.position + intersection.nextPosition ) / 2.0;
-
-			} else {
-
-				if( j == 0 ) {
-
-					break;
-					
-				} else {
-
-					vec3 nextPos = intersection.nextPosition + ( intersection.nextPosition - intersection.position ) / 2.0;
-					intersection.position = intersection.nextPosition;
-					intersection.nextPosition = nextPos;
-
-				}
-
-			}
+		startPosClip = getScreenPos( intersection.position );
+		nextPosClip = getScreenPos( intersection.nextPosition );
 		
+		nextPosUV = nextPosClip.xy * 0.5 + 0.5;
+
+		texDepthFront = texture2D( depthBuffer, nextPosUV );
+		texDepthFrontClip = texDepthFront.x / texDepthFront.w;
+
+		texDepthBack = texture2D( backDepthBuffer, nextPosUV );
+		texDepthBackClip = texDepthBack.x / texDepthBack.w;
+
+		if(
+			( nextPosClip.z >= texDepthFrontClip && startPosClip.z <= texDepthBackClip ) && texDepthFrontClip != 0.0 
+		) {
+
+			intersection.hit = true;
+			intersection.nextPosition = ( intersection.position + intersection.nextPosition ) / 2.0;
+
 		}
 
 		if( intersection.hit ) {
@@ -199,6 +185,7 @@ int shootRay( inout Intersection intersection, inout Ray ray, int bounce ) {
 			intersection.material = mat;
 			intersection.normal = normalize( texture2D( normalBuffer, nextPosUV ).xyz * 2.0 - 1.0 );
 			intersection.position = ( cameraProjectionMatrixInverse * vec4( (nextPosUV * 2.0 - 1.0) * texDepthFront.w, texDepthFrontClip, texDepthFront.w ) ).xyz;
+			
 			break;
 			
 		}
@@ -207,7 +194,6 @@ int shootRay( inout Intersection intersection, inout Ray ray, int bounce ) {
 
 	}
 
-
 	if( intersection.hit ) {
 
 		float seed =  frame * 0.001 + float( bounce );
@@ -215,7 +201,13 @@ int shootRay( inout Intersection intersection, inout Ray ray, int bounce ) {
 
 		ray.origin = intersection.position;
 
-		if( random( vUv * 10.0 + sin( time + float( frame ) + seed ) ) > 0.5 * ( 1.0 - intersection.material.roughness * ( 1.0 - intersection.material.metalness )  ) + intersection.material.metalness * 0.5 ) {
+		vec3 v = normalize( - intersection.position );
+		float dvh = dot( v, intersection.normal );
+
+		float rnd = random( vUv * 10.0 + sin( time + float( frame ) + seed ) );
+		float specular = fresnel( 0.04 + intersection.material.metalness * 0.96, dvh );
+
+		if( rnd > specular ) {
 			
 			ray.direction = diffuse( intersection, noise );
 			
@@ -224,6 +216,7 @@ int shootRay( inout Intersection intersection, inout Ray ray, int bounce ) {
 		} else {
 
 			ray.direction = ggx( intersection, ray, noise );
+
 			return 1;
 
 		}
@@ -232,6 +225,17 @@ int shootRay( inout Intersection intersection, inout Ray ray, int bounce ) {
 
 		vec4 rayDir = vec4( ray.direction, 1.0 ) * cameraMatrixWorldInverse;
 		intersection.material.emission = textureCube( envMap, rayDir.xyz, 0.0 ).xyz * 2.5;
+
+		#if NUM_DIR_LIGHTS > 0
+
+			for ( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {
+
+				DirectionalLight dirLight = directionalLights[ i ];
+				intersection.material.emission += smoothstep( 0.95, 1.0, dot(dirLight.direction, ray.direction) ) * 20.0 * dirLight.color;
+				
+			}
+
+		#endif
 
 	}
 
@@ -243,52 +247,40 @@ vec3 radiance( inout Ray ray ) {
 
 	Intersection intersection;
 
-	float memMetalness[MAX_BOUNCE];
-	vec3 memAlbedo[MAX_BOUNCE];
-	vec3 memEmission[MAX_BOUNCE];
-	int memDir[MAX_BOUNCE];
+	vec3 acc = vec3( 0.0 );
+	vec3 ref = vec3( 1.0 );
 
-	int bounce;
-	
 	for ( int i = 0; i < MAX_BOUNCE; i++ ) {
 
-		memDir[i] = shootRay( intersection, ray, i );
-		memAlbedo[i] = intersection.material.albedo;
-		memEmission[i] = intersection.material.emission;
-		memMetalness[i] = intersection.material.metalness;
+		int type = shootRay( intersection, ray, i );
+		Material mat = intersection.material;
 
-		if( !intersection.hit ) {
+		vec3 col;
 
-			bounce = i;
-
-			break;
-			
-		}
-	}
-
-	vec3 emission = memEmission[ MAX_BOUNCE - 1 ];
-	vec3 col;
-
-	for ( int i = MAX_BOUNCE -1; i >= 0 ; i-- ) {
-
-		if ( memDir[ i ] > 0 ) {
+		if ( type > 0 ) {
 
 			//ggx
-			col *= mix( vec3( 1.0 ), memAlbedo[i], memMetalness[ i ] );
+			col = mix( vec3( 1.0 ), mat.albedo, mat.metalness );
 
 		} else {
 			
 			//diffuse
-			col *= mix( vec3( 0.0 ), memAlbedo[i], 1.0 - memMetalness[ i ] );
+			col = mix( vec3( 0.0 ), mat.albedo, 1.0 - mat.metalness );
 
 		}
 
-		col += memEmission[ i ];
+		acc += ref * mat.emission;
+		ref *= col;
 
+		if( !intersection.hit ) {
+
+			break;
+			
+		}
+		
 	}
 
-	return col;
-	
+	return acc;
 	
 }
 
@@ -297,16 +289,27 @@ void main( void ) {
 	vec4 befTex = texture2D( backBuffer, vUv ) * min( frame, 1.0 ) ;
 
 	Ray ray;
-	// ray.origin = cameraPosition;
-	// ray.direction = ( cameraProjectionMatrixInverse * vec4( vUv * 2.0 - 1.0, 1.0, 1.0 ) ).xyz;
-	
 	ray.origin = vec3( 0.0, 0.0, 0.0 );
 	ray.direction = ( cameraProjectionMatrixInverse * vec4( vUv * 2.0 - 1.0, 1.0, 1.0 ) ).xyz;
-	ray.direction.xy += vec2( random( vUv + time ) * 2.0 - 1.0 , random( vUv - time ) * 2.0 - 1.0 ) / max( dataSize.y,dataSize.x );
 	ray.direction = normalize( ray.direction );
 
+	//random
+	float r1 = random( vUv + sin( frame * 0.1 ) );
+	float r2 = random( vUv - cos( frame * 0.1 ) );
+
+	//anti-aliasing
+	// ray.direction.xy += vec2( r1 * 2.0 - 1.0 , r2 * 2.0 - 1.0 ) * 0.001;
+
+	//DOF
+	float t1 = PI2 * r1;
+	float t2 = sqrt( r2 );
+	vec3 offset = vec3(cos(t1)*t2, sin(t1)*t2, 0.0) * (dofBlurRadius + 0.0);
+	vec3 p = ray.origin + ray.direction * (focalDistance);
+	ray.origin += offset;
+	ray.direction = normalize( p - ray.origin );
+	
 	vec4 o = vec4( ( befTex.xyz + radiance( ray ) ) , 1.0 );
+
 	gl_FragColor = o;
-
-
+	
 }

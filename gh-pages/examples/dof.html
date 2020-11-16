@@ -1,0 +1,165 @@
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>OrayTracingRenderer</title>
+</head>
+<body>
+	
+	<style>
+		*{
+			margin: 0;
+			box-sizing: border-box;
+		}
+		canvas {
+			position: relative;
+		}
+	</style>
+	
+	<canvas id="canvas"></canvas>
+	
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.js"></script>
+	<script src="../../build/oray-tracing-renderer.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/tweakpane@1.5.5/dist/tweakpane.min.js"></script>
+	<script src="./utils/GLTFLoader.js"></script>
+	<script src="./utils/OrbitControls.js"></script>
+
+	<script type="module">
+
+		/*------------------------
+			Init TweakPane
+		------------------------*/
+
+		let params = {
+			dofBlurRadius: 0.15,
+			focalDistance: 7
+		}
+		
+		let pane = new Tweakpane();
+		pane.addInput( params, 'dofBlurRadius', {
+			min: 0, max: 1.0,
+		} );
+		pane.addInput( params, 'focalDistance', {
+			min: 0, max: 20,
+		} );
+		
+		let updateParams = () => {
+
+			let keys = Object.keys( params );
+			for( let i = 0; i < keys.length; i++ ) {
+
+				orayRenderer[keys[i]] = params[keys[i]];
+				
+			}
+
+			orayRenderer.resetFrame();
+
+		}
+		
+		pane.on( 'change', updateParams );
+		
+		
+		/*------------------------
+			Init Renderers	
+		------------------------*/
+
+		let renderer = new THREE.WebGLRenderer({
+			canvas: document.querySelector( '#canvas' ),
+		})
+
+		let orayRenderer = new OrayTracingRenderer.Renderer( renderer, new THREE.Vector2( 0, 0 ) );
+		updateParams();
+		
+		/*------------------------
+			Init Scene
+		------------------------*/
+		
+		let scene = new THREE.Scene();
+		let camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 0.1, 1000 );
+		camera.position.set( 3, 3, 10 );
+
+		let controls = new THREE.OrbitControls( camera, renderer.domElement );
+		controls.addEventListener( 'change', () => {
+
+			orayRenderer.resetFrame();
+			
+		} );
+
+		let gltfLoader = new THREE.GLTFLoader();
+		gltfLoader.load( './assets/basic.glb', ( gltf ) => {
+
+			scene.add( gltf.scene );
+
+			scene.traverse( obj => {
+
+				if ( obj.isMesh ) {
+
+					obj.material = new OrayTracingRenderer.Material( {
+						baseMaterial: obj.material
+					} );
+
+					if ( obj.name.indexOf( 'Light' ) > - 1 ) {
+
+						obj.material.emission = new THREE.Vector3( 10, 10, 10 );
+
+					}
+
+				}
+
+			} );
+
+			let light = new THREE.Mesh( new THREE.SphereBufferGeometry(0.1), new OrayTracingRenderer.Material({
+				emission: new THREE.Vector3( 10.0, 10.0, 10.0 )
+			}))
+			scene.add( light );
+
+			orayRenderer.resetFrame();
+
+		} );
+
+		let loader = new THREE.CubeTextureLoader();
+		loader.load( [
+			'./assets/img/cubemap/Bridge2/posx.jpg',
+			'./assets/img/cubemap/Bridge2/negx.jpg',
+			'./assets/img/cubemap/Bridge2/posy.jpg',
+			'./assets/img/cubemap/Bridge2/negy.jpg',
+			'./assets/img/cubemap/Bridge2/posz.jpg',
+			'./assets/img/cubemap/Bridge2/negz.jpg',
+		], ( tex ) => {
+
+			scene.background = tex;
+
+		} );
+		
+		onResize();
+		animate();
+		
+		function animate() {
+
+			controls.update();
+			orayRenderer.render( scene, camera );
+			
+			requestAnimationFrame( animate );
+			
+		}
+
+		function onResize() {
+
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
+			
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			orayRenderer.resize( new THREE.Vector2( window.innerWidth, window.innerHeight ).multiplyScalar( 0.8 ) );
+			orayRenderer.resetFrame();
+			
+		}
+		
+		window.addEventListener( 'resize', () => {
+
+			onResize();
+
+		})
+
+	</script>
+</body>
+</html>

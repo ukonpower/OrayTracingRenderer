@@ -19,19 +19,17 @@
 	<canvas id="canvas"></canvas>
 	
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.js"></script>
-	
+	<script src="../../build/oray-tracing-renderer.js"></script>
 	<script src="./utils/GLTFLoader.js"></script>
 	<script src="./utils/OrbitControls.js"></script>
 
 	<script type="module">
 
-		import * as OrayTracingRenderer from '../../build/oray-tracing-renderer.module.js'
-		
 		let renderer = new THREE.WebGLRenderer({
 			canvas: document.querySelector( '#canvas' ),
 		})
 
-		let orayRenderer = new OrayTracingRenderer.Renderer( renderer, new THREE.Vector2( window.innerWidth, window.innerHeight ) );
+		let orayRenderer = new OrayTracingRenderer.Renderer( renderer, new THREE.Vector2( window.innerWidth, window.innerHeight ).multiplyScalar( 0.8 ) );
 		let scene = new THREE.Scene();
 
 		let camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 0.1, 1000 );
@@ -45,7 +43,7 @@
 		} );
 
 		let gltfLoader = new THREE.GLTFLoader();
-		gltfLoader.load( './assets/webgl-path-tracing.glb', ( gltf ) => {
+		gltfLoader.load( './assets/basic.glb', ( gltf ) => {
 
 			scene.add( gltf.scene );
 
@@ -103,6 +101,8 @@
 			camera.updateProjectionMatrix();
 			
 			renderer.setSize( window.innerWidth, window.innerHeight );
+			orayRenderer.resize( new THREE.Vector2( window.innerWidth, window.innerHeight ).multiplyScalar( 1.0 ) );
+			orayRenderer.resetFrame();
 			
 		}
 		
