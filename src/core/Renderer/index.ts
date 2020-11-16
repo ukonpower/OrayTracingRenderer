@@ -215,10 +215,10 @@ export class Renderer extends GPUComputationController {
 			let keys = Object.keys( this.orayRenderTargets );
 
 			for ( let i = 0; i < keys.length; i ++ ) {
-
+				
 				scene.traverse( ( obj ) => {
 
-					if ( ( obj as THREE.Mesh ).isMesh && ( ( obj as THREE.Mesh ).material as Material ).isMaterial ) {
+					if ( ( obj as THREE.Mesh ).isMesh && ( ( obj as THREE.Mesh ).material as any ).isOrayTracingMaterial ) {
 
 						( ( obj as THREE.Mesh ).material as Material ).setRenderType( i );
 
