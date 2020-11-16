@@ -1,6 +1,6 @@
 {
   "name": "package-template-webpack",
-  "version": "0.0.1",
+  "version": "0.0.1-dev1",
   "description": "",
   "main": "build/package-template-webpack.js",
   "author": "ukonpower",
