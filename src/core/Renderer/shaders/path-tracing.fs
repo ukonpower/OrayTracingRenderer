@@ -20,13 +20,17 @@ uniform sampler2D backNormalBuffer;
 uniform sampler2D backDepthBuffer;
 uniform samplerCube envMap;
 
+uniform int MAX_BOUNCE;
+uniform int MAX_STEP;
+uniform float RAY_DISTANCE;
+
 varying vec2 vUv;
 
 #pragma glslify: random = require( './random.glsl' )
 
-#define MAX_BOUNCE 5
-#define MAX_STEP 70
-#define RAY_DISTANCE 0.7
+// #define MAX_BOUNCE 5
+// #define MAX_STEP 70
+// #define RAY_DISTANCE 0.7
 #define INF 1e+10
 #define EPS 1e-5
 

@@ -89,6 +89,15 @@ export class Renderer extends GPUComputationController {
 			},
 			focalDistance: {
 				value: 10.0
+			},
+			MAX_BOUNCE: {
+				value: 5,
+			},
+			MAX_STEP: {
+				value: 50
+			},
+			RAY_DISTANCE: {
+				value: 0.5
 			}
 		}, THREE.UniformsLib.lights ] );
 
@@ -125,12 +134,40 @@ export class Renderer extends GPUComputationController {
 	public set focalDistance( value: number ) {
 
 		this.commonUniforms.focalDistance.value = value;
+		
+		this.resetFrame();
+
+	}
+
+	public set maxBounce( value: number ) {
+
+		this.commonUniforms.MAX_BOUNCE.value = value;
+		
+		this.resetFrame();
+
+	}
+
+	public set maxStep( value: number ) {
+
+		this.commonUniforms.MAX_STEP.value = value;
+		
+		this.resetFrame();
+
+	}
+
+	public set rayDistance( value: number ) {
+
+		this.commonUniforms.RAY_DISTANCE.value = value;
+		
+		this.resetFrame();
 
 	}
 
 	public set dofBlurRadius( value: number ) {
 
 		this.commonUniforms.dofBlurRadius.value = value;
+
+		this.resetFrame();
 
 	}
 
