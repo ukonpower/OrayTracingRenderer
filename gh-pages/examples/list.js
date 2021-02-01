@@ -2,9 +2,6 @@ var list = {
 	"General": [
 		"basic",
 		"dof",
-		"lights",
+		"cornelbox"
 	],
-	"Test": [
-		"render-speed"
-	]
 };

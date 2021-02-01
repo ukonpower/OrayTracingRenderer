@@ -134,7 +134,7 @@ export class Renderer extends GPUComputationController {
 	public set focalDistance( value: number ) {
 
 		this.commonUniforms.focalDistance.value = value;
-		
+
 		this.resetFrame();
 
 	}
@@ -142,7 +142,7 @@ export class Renderer extends GPUComputationController {
 	public set maxBounce( value: number ) {
 
 		this.commonUniforms.MAX_BOUNCE.value = value;
-		
+
 		this.resetFrame();
 
 	}
@@ -150,7 +150,7 @@ export class Renderer extends GPUComputationController {
 	public set maxStep( value: number ) {
 
 		this.commonUniforms.MAX_STEP.value = value;
-		
+
 		this.resetFrame();
 
 	}
@@ -158,7 +158,7 @@ export class Renderer extends GPUComputationController {
 	public set rayDistance( value: number ) {
 
 		this.commonUniforms.RAY_DISTANCE.value = value;
-		
+
 		this.resetFrame();
 
 	}
@@ -252,7 +252,7 @@ export class Renderer extends GPUComputationController {
 			let keys = Object.keys( this.orayRenderTargets );
 
 			for ( let i = 0; i < keys.length; i ++ ) {
-				
+
 				scene.traverse( ( obj ) => {
 
 					if ( ( obj as THREE.Mesh ).isMesh && ( ( obj as THREE.Mesh ).material as any ).isOrayTracingMaterial ) {
