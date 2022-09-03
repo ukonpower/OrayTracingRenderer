@@ -34,8 +34,8 @@ orayRenderer.resetFrame();
 obj.material = new OrayTracingRenderer.Material( {
 	albedo: new THREE.Vector3();
 	emission: new THREE.Vector3()
-	roughness: new number();
-	metalness: new number();
+	roughness: 1.0;
+	metalness: 0.0;
 	albedoMap: new THREE.Texture();
 	emissionMap: new THREE.Texture();
 	roughnessMap: new THREE.Texture();
